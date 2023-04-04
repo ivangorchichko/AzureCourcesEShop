@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.ApplicationCore.Specifications;
+using Microsoft.Extensions.Logging;
 using MinimalApi.Endpoint;
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints;
@@ -19,11 +20,14 @@ public class CatalogItemListPagedEndpoint : IEndpoint<IResult, ListPagedCatalogI
 {
     private readonly IUriComposer _uriComposer;
     private readonly IMapper _mapper;
+    private readonly ILogger<CatalogItemListPagedEndpoint> _logger;
 
-    public CatalogItemListPagedEndpoint(IUriComposer uriComposer, IMapper mapper)
+    public CatalogItemListPagedEndpoint(IUriComposer uriComposer, IMapper mapper,
+        ILogger<CatalogItemListPagedEndpoint> logger)
     {
         _uriComposer = uriComposer;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public void AddRoute(IEndpointRouteBuilder app)
@@ -39,35 +43,40 @@ public class CatalogItemListPagedEndpoint : IEndpoint<IResult, ListPagedCatalogI
 
     public async Task<IResult> HandleAsync(ListPagedCatalogItemRequest request, IRepository<CatalogItem> itemRepository)
     {
+
         await Task.Delay(1000);
         var response = new ListPagedCatalogItemResponse(request.CorrelationId());
 
         var filterSpec = new CatalogFilterSpecification(request.CatalogBrandId, request.CatalogTypeId);
         int totalItems = await itemRepository.CountAsync(filterSpec);
 
+        System.Diagnostics.Trace.TraceInformation("Total items received from database: {0}", totalItems);
+        _logger.LogInformation("Total items received from database: {Count}", totalItems);
+
         var pagedSpec = new CatalogFilterPaginatedSpecification(
             skip: request.PageIndex * request.PageSize,
             take: request.PageSize,
             brandId: request.CatalogBrandId,
             typeId: request.CatalogTypeId);
+        throw new Exception("Cannot move further");
 
-        var items = await itemRepository.ListAsync(pagedSpec);
+        //var items = await itemRepository.ListAsync(pagedSpec);
 
-        response.CatalogItems.AddRange(items.Select(_mapper.Map<CatalogItemDto>));
-        foreach (CatalogItemDto item in response.CatalogItems)
-        {
-            item.PictureUri = _uriComposer.ComposePicUri(item.PictureUri);
-        }
+        //response.CatalogItems.AddRange(items.Select(_mapper.Map<CatalogItemDto>));
+        //foreach (CatalogItemDto item in response.CatalogItems)
+        //{
+        //    item.PictureUri = _uriComposer.ComposePicUri(item.PictureUri);
+        //}
 
-        if (request.PageSize > 0)
-        {
-            response.PageCount = int.Parse(Math.Ceiling((decimal)totalItems / request.PageSize).ToString());
-        }
-        else
-        {
-            response.PageCount = totalItems > 0 ? 1 : 0;
-        }
+        //if (request.PageSize > 0)
+        //{
+        //    response.PageCount = int.Parse(Math.Ceiling((decimal)totalItems / request.PageSize).ToString());
+        //}
+        //else
+        //{
+        //    response.PageCount = totalItems > 0 ? 1 : 0;
+        //}
 
-        return Results.Ok(response);
+        //throw new Exception("Cannot move further");
     }
 }
