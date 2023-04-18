@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Exceptions;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
@@ -56,16 +57,23 @@ public class CheckoutModel : PageModel
 
             var updateModel = items.ToDictionary(b => b.Id.ToString(), b => b.Quantity);
             await _basketService.SetQuantities(BasketModel.Id, updateModel);
-            await _orderService.CreateOrderAsync(BasketModel.Id, new Address("123 Main St.", "Kent", "OH", "United States", "44240"));
+            var order = await _orderService.CreateOrderAsync(BasketModel.Id, new Address("123 Main St.", "Kent", "OH", "United States", "44240"));
             await _basketService.DeleteBasketAsync(BasketModel.Id);
+            var orderDetails = new
+            {
+                ShippingAddress = order.ShipToAddress,
+                Items = order.OrderItems,
+                Price = order.Total()
+            };
+           
             var client = new HttpClient();
-            var jsonDictionary = JsonConvert.SerializeObject(updateModel);
+            var jsonDictionary = JsonConvert.SerializeObject(orderDetails);
             var content = new StringContent(jsonDictionary, Encoding.UTF8, "application/json");
             await client.PostAsync(
-                //"http://localhost:7071/api/OrderItemsReserver",
-                "https://eshopfunctions.azurewebsites.net/api/OrderItemsReserver?code=n7S82oWXwChzNGeUTqKSD5mlJ7ZSbfA2GzZ5b3btFhO9AzFulRQhsQ==",
+                "http://localhost:7071/api/OrderItemsReserver",
+             //   "https://ivangorchichkofuncapp.azurewebsites.net/api/OrderItemsReserver?code=641XBQTuFvKl8COFj_ZwLyLKtNdQzL-VT51l0HK5zhWMAzFuJ9YhCQ==",
                 content
-            );
+            );  
         }
         catch (EmptyBasketOnCheckoutException emptyBasketOnCheckoutException)
         {
