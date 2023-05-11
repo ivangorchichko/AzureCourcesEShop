@@ -5,5 +5,5 @@ namespace Microsoft.eShopWeb.ApplicationCore.Interfaces;
 
 public interface IOrderService
 {
-    Task<Order> CreateOrderAsync(int basketId, Address shippingAddress);
+    Task CreateOrderAsync(int basketId, Address shippingAddress);
 }
