@@ -22,13 +22,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.AddConsole();
 
-////builder.Configuration.AddAzureAppConfiguration();
-//var a = Environment.GetEnvironmentVariable("VaultName");
-////vault configuration
-//var vaultName = builder.Configuration["VaultName"];
-//Uri vaultUri = new Uri($"https://{vaultName}.vault.azure.net/");
-//builder.Configuration.AddAzureKeyVault(vaultUri, new DefaultAzureCredential());
-
 Microsoft.eShopWeb.Infrastructure.Dependencies.ConfigureServices(builder.Configuration, builder.Services);
 
 builder.Services.AddCookieSettings();
